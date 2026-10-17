@@ -1,0 +1,16 @@
+# Datasets are downloaded with scripts/download_data.sh, never committed
+data/
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Keys and secrets
+*.pem
+.jupyter_token
+.env
+# Language model weights (downloaded by scripts/download_data.sh)
+models/
+
+# macOS metadata
+._*
+.DS_Store
