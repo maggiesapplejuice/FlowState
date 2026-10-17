@@ -1,0 +1,297 @@
+<title>WaterProject Threat Console</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: an operator console after the ISA-101 high-performance HMI idea. Calm greys for normal state,
+   color only for abnormal conditions; summary strip first, then the evidence, method and limits last. */
+:root {
+  --bg: #e6e9ec; --panel: #f4f6f7; --raised: #ffffff; --ink: #1b2126; --muted: #5a6670; --faint: #8a949c;
+  --line: #c7cdd2; --water: #2c6a99; --water-soft: #d6e4ef; --alarm: #b9342a; --alarm-soft: #f3d9d6;
+  --warn: #a8701a; --ok: #377548; --ok-soft: #d8eadc;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s7: 48px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #13171a; --panel: #1b2024; --raised: #21272c; --ink: #e2e7ea; --muted: #9aa5ae; --faint: #6f7a83;
+  --line: #313a41; --water: #6da7d6; --water-soft: #1f3445; --alarm: #ec6b60; --alarm-soft: #4a2420;
+  --warn: #dda24a; --ok: #6cbd83; --ok-soft: #1e3a27; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #13171a; --panel: #1b2024; --raised: #21272c; --ink: #e2e7ea; --muted: #9aa5ae; --faint: #6f7a83;
+  --line: #313a41; --water: #6da7d6; --water-soft: #1f3445; --alarm: #ec6b60; --alarm-soft: #4a2420;
+  --warn: #dda24a; --ok: #6cbd83; --ok-soft: #1e3a27; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: var(--s5) var(--s7); }
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: var(--s5); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(30px, 4.6vw, 44px); font-weight: 700; letter-spacing: .01em; }
+h2 { font-size: 24px; font-weight: 600; letter-spacing: .01em; }
+h3 { font-size: 17px; font-weight: 600; letter-spacing: .02em; }
+p { margin: 0; max-width: 70ch; }
+.muted { color: var(--muted); }
+.label { font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+.masthead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: var(--s4) var(--s5); align-items: end; border-bottom: 2px solid var(--ink); padding-bottom: var(--s4); }
+.masthead p { margin-top: var(--s2); color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); justify-content: flex-end; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border: 1px solid var(--line); border-radius: 3px; background: var(--panel); font-family: var(--font-data); font-size: 12px; white-space: nowrap; color: var(--ink); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+.dot.ok { background: var(--ok); } .dot.alarm { background: var(--alarm); } .dot.water { background: var(--water); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.kpi { background: var(--panel); padding: var(--s3) var(--s4); display: grid; gap: 2px; align-content: start; min-width: 0; }
+.kpi .v { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 600; line-height: 1.15; }
+.kpi .v small { font-size: 14px; color: var(--muted); font-weight: 400; }
+.kpi .d { font-size: 13px; color: var(--muted); line-height: 1.35; }
+.panel { background: var(--panel); border: 1px solid var(--line); padding: var(--s5); display: grid; gap: var(--s4); min-width: 0; }
+.panel > header { display: grid; gap: var(--s2); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: var(--s5); }
+.scroll { overflow-x: auto; min-width: 0; }
+svg { display: block; max-width: 100%; height: auto; }
+svg text { fill: var(--muted); font-family: var(--font-data); font-size: 11px; }
+svg .ink { fill: var(--ink); }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s3); align-items: stretch; }
+.step { background: var(--raised); border: 1px solid var(--line); padding: var(--s3) var(--s4); display: grid; gap: 4px; align-content: start; }
+.step b { font-family: var(--font-display); font-size: 16px; letter-spacing: .02em; }
+.step.alarm { border-color: var(--alarm); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab { font-family: var(--font-data); font-size: 12.5px; padding: 5px 10px; border: 1px solid var(--line); background: var(--raised); color: var(--ink); border-radius: 3px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--alarm); }
+.tab .dot { width: 7px; height: 7px; }
+.meta { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); font-size: 13.5px; }
+.meta b { font-family: var(--font-data); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; font-size: 12.5px; color: var(--muted); }
+.status { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+table.data { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+table.data th { text-align: left; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--ink); padding: 6px 8px; white-space: nowrap; }
+table.data td { border-bottom: 1px solid var(--line); padding: 7px 8px; vertical-align: top; }
+table.data td.r, table.data th.r { text-align: right; }
+.pill { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 2px; white-space: nowrap; font-family: var(--font-data); }
+.pill.ok { background: var(--ok-soft); color: var(--ink); } .pill.alarm { background: var(--alarm-soft); color: var(--ink); }
+.brief { background: var(--raised); border: 1px solid var(--line); border-left: 4px solid var(--alarm); padding: var(--s4) var(--s5); font-family: var(--font-data); font-size: 13px; line-height: 1.6; white-space: pre-wrap; max-width: 92ch; overflow-wrap: anywhere; }
+ul.list { display: grid; gap: var(--s2); padding-left: 1.1em; margin: 0; max-width: 90ch; }
+footer { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: var(--s2) var(--s5); }
+@media (max-width: 900px) { .masthead { grid-template-columns: 1fr; } .masthead .chips { justify-content: flex-start; } }
+@media (max-width: 640px) { .panel { padding: var(--s4); } .kpi .v { font-size: 22px; } }
+@media (prefers-reduced-motion: no-preference) { .tab { transition: box-shadow .15s ease; } }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="label">IBM Z Datathon 2026 · Real-Time AI for Critical Decisions</div>
+      <h1>WaterProject Threat Console</h1>
+      <p>Catches attacks on a Siemens-controlled water process by checking whether the controller's valve and pump commands match what it normally does. Every number here was computed on our IBM LinuxONE server.</p>
+    </div>
+    <div class="chips" id="platform"></div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Summary"></section>
+
+  <section class="panel">
+    <header>
+      <h2>How the controller check works</h2>
+      <p class="muted">Attackers in the 2026 water-utility campaign reached controllers and changed what they told pumps and valves to do. A changed command can still produce readings that look physically normal, so we check the command itself.</p>
+    </header>
+    <div class="flow">
+      <div class="step"><b>1. Read the plant</b><span class="muted">Water level, its high and low setpoints, flow, pressure and the hydro-turbine demand, every second.</span></div>
+      <div class="step"><b>2. Expect a command</b><span class="muted">A model trained only on normal operation predicts the valve and pump command the Siemens S7-300 would normally issue.</span></div>
+      <div class="step"><b>3. Compare</b><span class="muted">The gap between the actual and expected command, in multiples of its normal size.</span></div>
+      <div class="step alarm"><b>4. Alarm</b><span class="muted">When the gap stays above the alarm level for 10 seconds, raise an alarm and write a plain-English brief.</span></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>Watch each attack get caught</h2>
+      <p class="muted">Every attack on the water process in HAI 22.04 and 23.05, from 2 minutes before it starts. Solid lines are the controller's actual commands; dashed lines are what it would normally command. The bottom trace is the alarm score; above 1.0 is over the alarm level.</p>
+    </header>
+    <div class="tabs" role="tablist" id="tabs" aria-label="Attack"></div>
+    <div class="meta" id="meta"></div>
+    <div class="scroll"><svg id="trace" viewBox="0 0 900 470" role="img" aria-label="Valve and pump commands, actual and expected, and the alarm score around one attack"></svg></div>
+    <div class="legend" id="trace-legend"></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <header><h2>Scoreboard</h2><p class="muted" id="score-intro"></p></header>
+      <div class="scroll"><table class="data" id="score"></table></div>
+    </div>
+    <div class="panel">
+      <header><h2>False alarms</h2><p class="muted" id="fa-intro"></p></header>
+      <div class="scroll"><table class="data" id="fa"></table></div>
+      <h3>Three versions of the check, same test</h3>
+      <div class="scroll"><table class="data" id="compare"></table></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header>
+      <h2>Incident brief, written on the server</h2>
+      <p class="muted">IBM Granite 3.3 2B Instruct runs locally on LinuxONE with llama.cpp, so no plant data leaves the machine. The facts and first steps come from our code; the model writes the explanation.</p>
+    </header>
+    <div class="brief" id="brief"></div>
+  </section>
+
+  <section class="grid2">
+    <div class="panel">
+      <header><h2>The dataset</h2><p class="muted" id="ds-intro"></p></header>
+      <div class="scroll"><table class="data" id="ds"></table></div>
+      <div class="scroll"><table class="data" id="readings"></table></div>
+    </div>
+    <div class="panel">
+      <header><h2>Problems we found in the data</h2></header>
+      <ul class="list" id="issues"></ul>
+      <h3>Limits of these results</h3>
+      <ul class="list" id="limits"></ul>
+    </div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script id="data" type="application/json">/*__DATA__*/</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const R = D.results, S = R.summary;
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  const h = (tag, attrs = {}, ...kids) => { const e = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) { if (v == null) continue; if (k === "class") e.className = v; else if (k === "html") e.innerHTML = v; else if (k === "style") e.style.cssText = v; else e.setAttribute(k, v); }
+    for (const k of kids.flat()) if (k != null) e.append(k.nodeType ? k : document.createTextNode(String(k))); return e; };
+  const s = (tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v); if (text != null) e.textContent = text; return e; };
+  const fmt = (n, d = 0) => n == null ? "–" : Number(n).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const range = (r) => `${fmt(r[0], 1)} to ${fmt(r[1], 1)}`;
+
+  const P = D.platform;
+  for (const [c, t] of [["water", "IBM LinuxONE · " + P.arch], ["water", "IBM z17 · machine " + P.machine_type], [P.nnpa ? "ok" : "", "Telum II AI accelerator " + (P.nnpa ? "on" : "off")], ["", P.os.replace("Red Hat Enterprise Linux", "RHEL")], ["", "Computed " + D.generated_utc]])
+    $("platform").append(h("span", { class: "chip" }, h("span", { class: "dot " + c }), t));
+
+  const NN = R.neural_network_on_telum;
+  const kpis = [
+    [`${S.water_caught}<small> / ${S.water_attacks}</small>`, "Water-process attacks caught", "on a Siemens S7-300, in tests the model never trained on"],
+    [`${fmt(S.median_seconds_to_flag)}<small> s</small>`, "Median time to alarm", "from the moment the attacker's change began"],
+    [`${fmt(S.per_day, 1)}`, "False alarms per day", `likely range ${range(S.per_day_range)}, over ${fmt(S.attack_free_hours)} attack-free hours`],
+    [`${S.elsewhere_alarmed}<small> / ${S.elsewhere_attacks}</small>`, "Alarms from attacks elsewhere", "attacks on the boiler and turbine; it stays focused on the water process"],
+    [`${fmt(R.hours.learn)}<small> h</small>`, "Normal operation learned", "from HAI 22.04 and 23.05; attacks never used for training"],
+    [`${fmt(NN.nnpa_seconds, 2)}<small> s</small>`, "On the Telum accelerator", `neural-network version scored ${fmt(NN.rows)} seconds of test data`],
+  ];
+  for (const [v, l, d] of kpis) $("kpis").append(h("div", { class: "kpi" }, h("div", { class: "label" }, l), h("div", { class: "v", html: v }), h("div", { class: "d" }, d)));
+
+  /* ---------- traces ---------- */
+  const T = D.traces;
+  function draw(i) {
+    const t = T[i], svg = $("trace"); svg.replaceChildren();
+    const W = 900, L = 56, Rm = 14, x0 = Math.min(...t.t), x1 = Math.max(...t.t);
+    const X = (v) => L + (v - x0) / (x1 - x0) * (W - L - Rm);
+    const panels = [{ key: "valve", label: "Valve position command", top: 14, h: 120 }, { key: "pump", label: "Pump speed command", top: 168, h: 120 }, { key: "score", label: "Alarm score (× alarm level)", top: 322, h: 100 }];
+    let a0 = null;
+    t.attack_flag.forEach((a, j) => { if (a && a0 === null) a0 = j; if ((!a || j === t.attack_flag.length - 1) && a0 !== null) { const j1 = a ? j : j - 1;
+      for (const p of panels) svg.append(s("rect", { x: X(t.t[a0]), y: p.top, width: Math.max(2, X(t.t[j1]) - X(t.t[a0])), height: p.h, fill: "var(--alarm-soft)" })); a0 = null; } });
+    for (const p of panels) {
+      svg.append(s("rect", { x: L, y: p.top, width: W - L - Rm, height: p.h, fill: "none", stroke: "var(--line)" }));
+      svg.append(s("text", { x: L + 4, y: p.top + 13, class: "ink" }, p.label));
+      let vals = p.key === "score" ? t.score : t[p.key].concat(t[p.key + "_expected"]);
+      let lo = Math.min(...vals), hi = Math.max(...vals);
+      if (p.key === "score") { lo = 0; hi = Math.max(1.5, Math.min(hi, 20)) * 1.05; }
+      else { const pad = (hi - lo) * .12 || 1; lo -= pad; hi += pad; }
+      const Y = (v) => p.top + (1 - (Math.min(Math.max(v, lo), hi) - lo) / (hi - lo)) * p.h;
+      const ticks = p.key === "score" ? [0, 1, Math.floor(hi)].filter((v, k, a) => a.indexOf(v) === k && v <= hi) : [lo + (hi - lo) * .15, lo + (hi - lo) * .85];
+      for (const v of ticks) { svg.append(s("line", { x1: L, x2: W - Rm, y1: Y(v), y2: Y(v), stroke: "var(--line)", "stroke-width": .6 })); svg.append(s("text", { x: L - 6, y: Y(v) + 4, "text-anchor": "end" }, fmt(v, p.key === "score" ? 0 : 0))); }
+      const line = (arr, col, dash, w) => svg.append(s("polyline", { points: arr.map((v, j) => `${X(t.t[j]).toFixed(1)},${Y(v).toFixed(1)}`).join(" "), fill: "none", stroke: col, "stroke-width": w, "stroke-dasharray": dash }));
+      if (p.key === "score") {
+        svg.append(s("polygon", { points: `${X(t.t[0])},${Y(0)} ` + t.score.map((v, j) => `${X(t.t[j]).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` ${X(t.t[t.t.length - 1])},${Y(0)}`, fill: "var(--water-soft)" }));
+        line(t.score, "var(--water)", null, 1.6);
+        svg.append(s("line", { x1: L, x2: W - Rm, y1: Y(1), y2: Y(1), stroke: "var(--alarm)", "stroke-dasharray": "5 4", "stroke-width": 1.2 }));
+        svg.append(s("text", { x: W - Rm - 4, y: Y(1) - 5, "text-anchor": "end", fill: "var(--alarm)" }, "alarm level"));
+      } else { line(t[p.key + "_expected"], "var(--muted)", "5 4", 1.4); line(t[p.key], "var(--ink)", null, 1.6); }
+    }
+    const bottom = panels[2].top + panels[2].h;
+    for (let v = Math.ceil(x0 / 60) * 60; v <= x1; v += Math.max(60, Math.round((x1 - x0) / 8 / 60) * 60)) {
+      svg.append(s("line", { x1: X(v), x2: X(v), y1: bottom, y2: bottom + 5, stroke: "var(--muted)" }));
+      svg.append(s("text", { x: X(v), y: bottom + 18, "text-anchor": "middle" }, (v > 0 ? "+" : "") + Math.round(v / 60) + " min"));
+    }
+    svg.append(s("line", { x1: X(0), x2: X(0), y1: panels[0].top, y2: bottom, stroke: "var(--alarm)", "stroke-width": 1 }));
+    svg.append(s("text", { x: X(0) + 4, y: panels[0].top + 28, fill: "var(--alarm)" }, "attack starts"));
+    if (t.seconds_to_flag != null) {
+      const fx = X(t.seconds_to_flag), p = panels[2];
+      svg.append(s("line", { x1: fx, x2: fx, y1: p.top, y2: p.top + p.h, stroke: "var(--alarm)", "stroke-width": 2 }));
+      svg.append(s("text", { x: Math.min(fx + 6, W - 150), y: p.top + 28, class: "ink" }, `alarm after ${fmt(t.seconds_to_flag)} s`));
+    }
+    const m = $("meta"); m.replaceChildren();
+    m.append(h("span", {}, h("b", {}, t.id), ` · HAI ${t.version} · ${t.start}`), h("span", {}, t.attack_text), h("span", {}, "Lasted ", h("b", {}, fmt(t.seconds) + " s")),
+      t.also_hits ? h("span", {}, `At the same time, an attack on the ${t.also_hits}`) : null,
+      h("span", {}, t.caught ? h("span", { class: "pill ok" }, `caught after ${fmt(t.seconds_to_flag)} s`) : h("span", { class: "pill alarm" }, "missed")));
+  }
+  T.forEach((t, i) => { const b = h("button", { class: "tab", role: "tab", "aria-selected": i === 0 ? "true" : "false" }, h("span", { class: "dot " + (t.caught ? "ok" : "alarm") }), t.id);
+    b.addEventListener("click", () => { document.querySelectorAll("#tabs .tab").forEach((x) => x.setAttribute("aria-selected", "false")); b.setAttribute("aria-selected", "true"); draw(i); try { localStorage.setItem("wp-hai-tab", String(i)); } catch (e) {} });
+    $("tabs").append(b); });
+  let start = 0; try { start = Math.min(+localStorage.getItem("wp-hai-tab") || 0, T.length - 1); } catch (e) {}
+  document.querySelectorAll("#tabs .tab").forEach((x, k) => x.setAttribute("aria-selected", k === start ? "true" : "false"));
+  draw(start);
+  const sw = (col, dash) => { const e = s("svg", { width: 26, height: 10, viewBox: "0 0 26 10" }); e.append(s("line", { x1: 0, x2: 26, y1: 5, y2: 5, stroke: col, "stroke-width": 2, "stroke-dasharray": dash })); return e; };
+  $("trace-legend").append(h("span", { class: "status" }, sw("var(--ink)"), "actual command"), h("span", { class: "status" }, sw("var(--muted)", "5 4"), "what the controller would normally command"), h("span", { class: "status" }, sw("var(--water)"), "alarm score"), h("span", {}, "· shaded = attack"));
+
+  /* ---------- scoreboard ---------- */
+  $("score-intro").textContent = `All ${S.water_attacks} attacks on the water process. The rule was fixed before testing: alarm when the gap stays above the 99.9th percentile of held-out normal data for 10 seconds; an attack counts as caught if the alarm starts during it or up to 60 seconds after.`;
+  const st = $("score");
+  st.append(h("thead", {}, h("tr", {}, h("th", {}, "Attack"), h("th", {}, "What the attacker did"), h("th", { class: "r" }, "Lasted"), h("th", { class: "r" }, "Result"))));
+  const sb = h("tbody");
+  for (const a of R.water_attacks) sb.append(h("tr", {}, h("td", { class: "num" }, `${a.id} · ${a.version}`), h("td", {}, a.attack + (a.also_hits ? `, plus an attack on the ${a.also_hits}` : "")),
+    h("td", { class: "r num" }, fmt(a.seconds) + " s"), h("td", { class: "r" }, a.caught ? h("span", { class: "pill ok" }, `${fmt(a.seconds_to_flag)} s`) : h("span", { class: "pill alarm" }, "missed"))));
+  st.append(sb);
+
+  /* ---------- false alarms ---------- */
+  $("fa-intro").textContent = `Any alarm that starts while no attack is running counts as a false alarm, with no exceptions. ${S.false_alarms} in ${fmt(S.attack_free_hours)} attack-free hours across both test sets.`;
+  const ft = $("fa");
+  ft.append(h("thead", {}, h("tr", {}, h("th", {}, "Test set"), h("th", { class: "r" }, "Attack-free hours"), h("th", { class: "r" }, "False alarms"), h("th", { class: "r" }, "Per day"), h("th", { class: "r" }, "Likely range"))));
+  const fb = h("tbody");
+  for (const [v, x] of Object.entries(R.by_version)) fb.append(h("tr", {}, h("td", {}, "HAI " + v), h("td", { class: "r num" }, fmt(x.attack_free_hours, 1)), h("td", { class: "r num" }, x.false_alarms), h("td", { class: "r num" }, fmt(x.per_day, 1)), h("td", { class: "r num" }, range(x.per_day_range))));
+  fb.append(h("tr", {}, h("td", {}, h("b", {}, "Both")), h("td", { class: "r num" }, fmt(S.attack_free_hours, 1)), h("td", { class: "r num" }, S.false_alarms), h("td", { class: "r num" }, fmt(S.per_day, 1)), h("td", { class: "r num" }, range(S.per_day_range))));
+  ft.append(fb);
+  const ct = $("compare"), C = R.comparison_2204_only;
+  ct.append(h("thead", {}, h("tr", {}, h("th", {}, "Version"), h("th", { class: "r" }, "Caught"), h("th", { class: "r" }, "False alarms / day"), h("th", { class: "r" }, "Alarms elsewhere"))));
+  const cb = h("tbody");
+  for (const [name, x] of [["Main: learned from 22.04 + 23.05", { water_caught: S.water_caught, water_attacks: S.water_attacks, per_day: S.per_day, per_day_range: S.per_day_range, elsewhere_alarmed: S.elsewhere_alarmed }], ["Learned from 22.04 only", C], ["Neural network on the Telum accelerator", NN]])
+    cb.append(h("tr", {}, h("td", {}, name), h("td", { class: "r num" }, `${x.water_caught}/${x.water_attacks}`), h("td", { class: "r num" }, `${fmt(x.per_day, 1)} (${range(x.per_day_range)})`), h("td", { class: "r num" }, x.elsewhere_alarmed)));
+  ct.append(cb);
+
+  $("brief").textContent = D.brief || "Run notebooks/03_incident_brief.ipynb to generate an example brief.";
+
+  /* ---------- dataset ---------- */
+  $("ds-intro").textContent = "HAI (HIL-based Augmented ICS) security dataset, github.com/icsdataset/hai, CC BY-SA 4.0. We use only its water process: a loop that pumps water into an upper tank, run by a Siemens S7-300 PLC, with demand set by a hydro-turbine simulation.";
+  const dt = $("ds");
+  dt.append(h("thead", {}, h("tr", {}, h("th", {}, "Used for"), h("th", {}, "Files"), h("th", { class: "r" }, "Hours"))));
+  const db = h("tbody");
+  for (const [u, f, hr] of [["Learn normal behavior", "22.04 train1–5, 23.05 train1–3", R.hours.learn], ["Set the alarm level", "22.04 train6, 23.05 train4", R.hours.calibrate], ["Test once", "22.04 test1–4, 23.05 test1–2", R.hours.test]])
+    db.append(h("tr", {}, h("td", {}, u), h("td", { class: "num", style: "font-size:12.5px" }, f), h("td", { class: "r num" }, fmt(hr))));
+  dt.append(db);
+  const rt = $("readings");
+  rt.append(h("thead", {}, h("tr", {}, h("th", {}, "Reading"), h("th", {}, "Meaning (HAI document)"))));
+  const rb = h("tbody");
+  for (const [k, v] of Object.entries(D.readings)) rb.append(h("tr", {}, h("td", { class: "num", style: "font-size:12.5px" }, k), h("td", {}, v)));
+  rt.append(rb);
+  const issues = [
+    "HAI 22.04's files carry one attack label for all processes, not one per process as the document describes. We identified water-process attacks by matching each labeled attack to HAI's attack tables; start times agree within about 20 seconds.",
+    "Two entries in HAI's 22.04 attack table contradict themselves (A301 and A305: a water-process scenario code with boiler targets, or the reverse). They are left out of every count.",
+    "A third entry, A304, lists boiler target points for a water-process scenario code (AP38). We count it as a water attack because of its scenario code.",
+    "HAI 23.05's second label file records times only to the minute. Its rows line up one-for-one with the data file, so labels are aligned by row, with a check that every row falls in the same minute.",
+  ];
+  for (const t of issues) $("issues").append(h("li", {}, t));
+  const limits = [
+    `Only ${S.water_attacks} attacks hit the water process. Catching all of them still leaves a true catch rate that could be as low as about 70%.`,
+    "One testbed: a lab water loop with a Siemens S7-300. A real utility has more equipment, more operators and more varied normal operation.",
+    "HAI's attacks change or replay valve and pump commands. Other attack styles, such as changing setpoints or taking over the operator screen, are not tested here.",
+    "The check looks at controller commands only. It does not include network traffic.",
+    "The second and third versions in the comparison table were run on the same test after the main version; the main version's rules were fixed before testing.",
+  ];
+  for (const t of limits) $("limits").append(h("li", {}, t));
+  $("foot").append(h("span", {}, `Computed on IBM LinuxONE · ${D.generated_utc}`), h("span", {}, "Code: WaterProject repository · Data: HAI 22.04 and 23.05"));
+})();
+</script>
