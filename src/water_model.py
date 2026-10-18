@@ -103,3 +103,42 @@ def evaluate(df, alarm, episodes, grace_s=RULE["grace_s"]):
           "per_day": round(len(starts) / hours * 24, 2), "per_day_range": [round(lo, 2), round(hi, 2)],
           "times": [str(df.timestamp.iloc[i]) for i in starts]}
     return res, fa
+
+
+class LevelReference:
+    """Where the tank level should be: the level 30 s ago plus the change the controller's *normal*
+    commands would have produced. During an attack the actual level drifts away from this line.
+    This is a display reference, not the alarm: on normal data it is accurate to about 0.7 % of
+    scale, and a drift of up to about 2 % happens in normal operation too.
+    """
+    H = 30
+
+    def __init__(self):
+        self.model = None
+
+    def _features(self, df, valve, pump):
+        seg = segments(df)
+        g = lambda s: pd.Series(np.asarray(s), index=df.index).groupby(seg)
+        f = pd.DataFrame(index=df.index)
+        f["level_prev"] = g(df.P3_LIT01).shift(self.H)
+        f["flow_prev"] = g(df.P3_FIT01).shift(self.H)
+        f["demand"] = df.P4_HT_PS
+        f["load"] = df.P4_LD
+        f["valve_mean"] = g(valve).transform(lambda s: s.rolling(self.H, min_periods=1).mean())
+        f["pump_mean"] = g(pump).transform(lambda s: s.rolling(self.H, min_periods=1).mean())
+        return f.bfill().ffill()
+
+    def fit(self, normal):
+        from xgboost import XGBRegressor
+        y = (normal.P3_LIT01 - normal.P3_LIT01.groupby(segments(normal)).shift(self.H)).bfill()
+        X = self._features(normal, normal.P3_LCV01D, normal.P3_LCP01D)
+        self.model = XGBRegressor(n_estimators=300, max_depth=5, learning_rate=0.1, subsample=0.8,
+                                  tree_method="hist", n_jobs=3)
+        self.model.fit(X.to_numpy()[::3], y.to_numpy()[::3])
+        return self
+
+    def expected_level(self, df, expected_commands):
+        """Level (raw counts) the tank should be at if the controller had issued its normal commands."""
+        prev = df.P3_LIT01.groupby(segments(df)).shift(self.H).bfill()
+        X = self._features(df, expected_commands["P3_LCV01D"], expected_commands["P3_LCP01D"])
+        return prev.to_numpy() + self.model.predict(X.to_numpy())
