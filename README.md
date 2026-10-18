@@ -77,9 +77,38 @@ Jupyter Lab ML container, which has pandas, XGBoost, PyTorch with the NNPA accel
    `python3 dashboard/render.py`, then serve it with
    `podman exec -d -w /home/ibm-user/WaterProject/dashboard notebook python -m http.server 38890 --bind 127.0.0.1`
    and tunnel port 38890 the same way.
+5. Live demo (the watch screen, the console and the simulated attack files):
+   `podman exec -d -w /home/ibm-user/WaterProject notebook sh -c "python demo/replay_server.py > /tmp/replay.log 2>&1"`,
+   tunnel port 38891 the same way, then open http://localhost:38891 (watch screen) or
+   http://localhost:38891/console (console). Details, the stop command and the video shot list are in `demo/README.md`.
 
 pip cannot build numpy or pandas on the server itself (no s390x packages, no compiler), so run all
 Python inside the container.
+
+## The live demo
+
+`demo/replay_server.py` replays a recording of the Siemens water process second by second, as if it were the
+one-way tap feed, scores every second with the controller check on LinuxONE, and shows the result on two pages:
+
+- **Watch screen** (`/`): the operator's supplemental screen. Alarm banner, plant schematic with both paths,
+  current readings, the incident brief (facts and first steps at once, the Granite explanation about 40 s
+  later), and the last ten minutes of charts. The scenario picker offers four real HAI attacks (A214, A310,
+  A104, A414), a normal stretch, one synthetic replay attack, and every CSV in `demo/attacks/`.
+- **Console** (`/console`): one plant, one check. Check performance, time to alarm for all 11 attacks, the
+  plant figure with the live mismatch, device status and the command traces. The server's current results are
+  injected on every request; the "Recompute on IBM LinuxONE" button re-runs notebook 02 and rebuilds them
+  (about 70 s). `?attack=A214` opens another recorded attack.
+
+**Simulated attack files.** `demo/attacks/FORMAT.md` gives the CSV format (HAI's 11 water-process tags, one row
+per second, plus an `attack` label). `make_attack.py` cuts an attack-free stretch from HAI, injects one of six
+attack kinds and verifies the result with the saved model. Two verified samples are included: a replayed pump
+command (alarm 13 s after the change) and a held valve command (24 s), with no false alarms before either.
+Only the attacked command column is changed; the tank level is not re-simulated, so the "where the level
+should be" line stays close to the recorded level during these synthetic attacks. The alarm does not depend
+on it.
+
+The demo is a replay of recorded and simulated data, not a live plant. The one-way tap is the deployment
+design; HAI records controller commands and readings, which approximate what the tap would see.
 
 ## Repository layout
 
@@ -89,8 +118,13 @@ Python inside the container.
 | `src/water_model.py` | The controller check, the fixed alarm rule and the evaluation |
 | `src/alerts.py`, `src/replay.py` | Shared alert format; replays recorded data as a live feed |
 | `scripts/download_data.sh` | Downloads HAI 22.04 and 23.05, the document and the language model |
-| `notebooks/` | The four notebooks above |
+| `notebooks/` | The four notebooks above, plus `run_controller_check.py` (notebook 02 as a script, used by the recompute button) |
 | `dashboard/` | Builds and renders the dashboard from the notebook results |
+| `demo/replay_server.py` | The live demo server: replay, scoring, incident brief, watch screen, console, recompute endpoint |
+| `demo/ui/` | The watch screen (`index.html`) and an offline copy with baked results (`offline.html`) |
+| `demo/console/` | The console template, served with the current results injected, and its theme (`plant.css`) |
+| `demo/attacks/` | Simulated attack files: `FORMAT.md`, `make_attack.py`, two verified samples |
+| `demo/README.md` | How to run, stop and record the demo |
 
 `data/` and `models/` are downloaded, not committed.
 
