@@ -1,0 +1,72 @@
+{
+ "A214": {
+  "facts": "Verdict: attack likely. On the Siemens-controlled water process, the valve position command stopped matching what the controller normally commands for this water level, at 3.6 times the alarm level. The water level itself is normal: 54%, inside its normal range of 25% to 70%.",
+  "explanation": "A command to the valve was likely altered, possibly by unauthorized access to the controller, as the valve position commanded no longer aligns with the standard operation, despite the water level remaining within its normal range of 25% to 70%.",
+  "steps": [
+   "Switch the affected pump or valve to manual and check the tank level directly.",
+   "Disconnect the controller from the internet and remote-access tools.",
+   "Change default and shared passwords on the controller and operator screens.",
+   "Compare the controller program with your last known-good copy.",
+   "Report to CISA and your local FBI field office."
+  ],
+  "seconds_after_change": 17,
+  "written_in_s": 91,
+  "pregenerated": true
+ },
+ "A310": {
+  "facts": "Verdict: attack likely. On the Siemens-controlled water process, the valve position command stopped matching what the controller normally commands for this water level, at 6.8 times the alarm level. The water level itself is normal: 71%, inside its normal range of 25% to 70%.",
+  "explanation": "A command to the valve was likely altered, possibly by unauthorized access to the controller, as the valve position command deviated from the usual pattern for the current water level of 6.8 times the alarm level, despite the water level being within the normal range of 25% to 70%.",
+  "steps": [
+   "Switch the affected pump or valve to manual and check the tank level directly.",
+   "Disconnect the controller from the internet and remote-access tools.",
+   "Change default and shared passwords on the controller and operator screens.",
+   "Compare the controller program with your last known-good copy.",
+   "Report to CISA and your local FBI field office."
+  ],
+  "seconds_after_change": 19,
+  "written_in_s": 63,
+  "pregenerated": true
+ },
+ "A104": {
+  "facts": "Verdict: attack likely. On the Siemens-controlled water process, the valve position command stopped matching what the controller normally commands for this water level, at 7.6 times the alarm level. The water level itself is normal: 47%, inside its normal range of 25% to 70%.",
+  "explanation": "A command to the valve was likely altered, possibly by unauthorized access to the controller, as the valve position commanded no longer aligns with the standard operation, despite the water level remaining within its normal range of 25% to 70%.",
+  "steps": [
+   "Switch the affected pump or valve to manual and check the tank level directly.",
+   "Disconnect the controller from the internet and remote-access tools.",
+   "Change default and shared passwords on the controller and operator screens.",
+   "Compare the controller program with your last known-good copy.",
+   "Report to CISA and your local FBI field office."
+  ],
+  "seconds_after_change": 22,
+  "written_in_s": 54,
+  "pregenerated": true
+ },
+ "A414": {
+  "facts": "Verdict: attack likely. On the Siemens-controlled water process, the pump speed command stopped matching what the controller normally commands for this water level, at 2.2 times the alarm level. The water level itself is normal: 56%, inside its normal range of 25% to 70%.",
+  "explanation": "A command to the pump was likely altered, possibly by unauthorized access to the controller, as the pump speed command deviated from the normal sequence at 2.2 times the alarm level, despite the water level remaining within the normal range of 25% to 70%.",
+  "steps": [
+   "Switch the affected pump or valve to manual and check the tank level directly.",
+   "Disconnect the controller from the internet and remote-access tools.",
+   "Change default and shared passwords on the controller and operator screens.",
+   "Compare the controller program with your last known-good copy.",
+   "Report to CISA and your local FBI field office."
+  ],
+  "seconds_after_change": 29,
+  "written_in_s": 60,
+  "pregenerated": true
+ },
+ "synthetic": {
+  "facts": "Verdict: attack likely. On the Siemens-controlled water process, the pump speed command stopped matching what the controller normally commands for this water level, at 1.5 times the alarm level. The water level itself is normal: 67%, inside its normal range of 25% to 70%.",
+  "explanation": "A command to the pump was likely altered, possibly by unauthorized access to the controller, as the pump speed command deviated from the normal sequence at 1.5 times the alarm level, despite the water level remaining within the normal range of 25% to 70%.",
+  "steps": [
+   "Switch the affected pump or valve to manual and check the tank level directly.",
+   "Disconnect the controller from the internet and remote-access tools.",
+   "Change default and shared passwords on the controller and operator screens.",
+   "Compare the controller program with your last known-good copy.",
+   "Report to CISA and your local FBI field office."
+  ],
+  "seconds_after_change": 13,
+  "written_in_s": 58,
+  "pregenerated": true
+ }
+}
