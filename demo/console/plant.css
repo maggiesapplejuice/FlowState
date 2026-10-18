@@ -51,3 +51,10 @@ body { background: var(--bg) !important; }
 .bignum { min-height: 1.05em; }
 #l-sub { min-height: 1.5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .p-gauge, .p-health, .p-line { min-height: 0; }
+
+/* Active transport buttons: white pill, dark text (the template assumes a colored pill with white text). */
+.transport #play, .ncard .open, .speed button[aria-pressed="true"], .viewtoggle button[aria-pressed="true"] { background: #ffffff; color: #0d1116; box-shadow: none; }
+.transport #play svg, .speed button[aria-pressed="true"] svg { color: #0d1116; }
+/* Time-to-alarm bars: teal top to bottom, no amber tint. */
+#tide-bar stop[offset="1"] { stop-color: var(--signal) !important; stop-opacity: 1; }
+#tide-bar stop[offset="0"] { stop-color: var(--signal) !important; stop-opacity: 0.35; }
