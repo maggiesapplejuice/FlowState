@@ -2,6 +2,8 @@
 
 **Theme:** Real-Time AI for Critical Decisions
 
+**Live dashboard:** https://maggiesapplejuice.github.io/WaterProject/ (the FlowState console as a static copy, results computed on IBM LinuxONE; the watch screen is at `/watch.html`). The live version with the recompute button runs on the team's LinuxONE server, see "The live demo" below.
+
 ## The problem
 
 In July 2026, a Clayton County, Georgia pump station failed overnight and residents lost water pressure.
