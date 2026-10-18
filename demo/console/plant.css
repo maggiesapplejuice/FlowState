@@ -1,0 +1,37 @@
+/* Single-plant console theme: charcoal panels, teal accents, flat surfaces. Loaded by replay_server.py on
+   every request (demo/console/plant.css), after the template's own styles, so it wins without a restart. */
+:root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --radius: 14px;
+  --bg: #0d1116; --panel: #151a20; --panel-solid: #151a20; --raised: #1b2129; --card: #151a20; --bar: rgba(13, 17, 22, 0.92);
+  --ink: #e9edf1; --ink-2: #a4aeb9; --ink-3: #6e7987; --line: rgba(255, 255, 255, 0.08); --grid: rgba(255, 255, 255, 0.06);
+  --accent: #4fc8de; --signal: #4fc8de; --signal-soft: rgba(79, 200, 222, 0.14);
+  --water: #4fb3e6; --water-2: #7fcdf2; --water-soft: rgba(79, 179, 230, 0.14);
+  --ok: #3fd08f; --ok-soft: rgba(63, 208, 143, 0.14); --warn: #d9a441; --warn-soft: rgba(217, 164, 65, 0.18); --alarm: #ff5c5c; --alarm-soft: rgba(255, 92, 92, 0.16);
+  --glass-edge: rgba(255, 255, 255, 0.07); --rim: rgba(255, 255, 255, 0.08); --hairline: rgba(255, 255, 255, 0.07);
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 30px rgba(0, 0, 0, 0.35); --btn: #1b2129; --btn-ink: #e9edf1; --hover: rgba(255, 255, 255, 0.05);
+  --page-image: linear-gradient(180deg, #0d1116, #0d1116);
+  --stage-image: radial-gradient(ellipse 70% 60% at 56% 56%, rgba(79, 179, 230, 0.07), transparent 70%);
+  --hero-image: linear-gradient(135deg, #1b2129, #151a20);
+  --tab-on: #ffffff; --tab-on-ink: #0d1116; --cta-glow: none;
+  --glow: 0; --ico-bg: rgba(79, 200, 222, 0.1);
+  --stage-bg: #0b0f14; --hub: #4fc8de; --stage-glow: rgba(79, 179, 230, 0.12);
+  --lamp: #ffb259; --yellow: #f2b43a; --petrol: #3f8fb8; --led-off: #2a323c; --module: #1e2630;
+  --edge: rgba(0, 0, 0, 0.6); --halo: rgba(0, 0, 0, 0.5);
+  --steel-1: #8c96a3; --steel-2: #6a7482; --steel-3: #4c5562; --steel-4: #343b46;
+  --paint-1: #4d6b86; --paint-2: #3d5569; --paint-3: #2f4252; --paint-4: #22303c;
+  --black-1: #2b323c; --black-2: #20262e; --black-3: #171c23; --black-4: #0f1319;
+  --conc-1: #1f2a38; --conc-2: #18212c; --conc-3: #121921; --conc-4: #0c1117;
+  --wat-1: #8fd8ff; --wat-2: #4fb3e6; --wat-3: #2e7fb8; --wat-4: #225f8a;
+  --glass: rgba(120, 180, 220, 0.12); --glass-hi: rgba(220, 235, 245, 0.18);
+  --tide-k: 0;
+}
+#tide { display: none !important; }
+body { background: var(--bg) !important; }
+.panel, .card, .ncard { border: 1px solid var(--line); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.topbar { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 1px 0 var(--line); }
+.tabs { background: #151a20; box-shadow: inset 0 0 0 1px var(--line); }
+.tabs a.on { background: #ffffff; color: #0d1116; box-shadow: none; }
+.chip { background: #151a20; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); }
+.transport select, .transport button, .pillbtn, .back, .speed, .viewtoggle { box-shadow: none; background: var(--btn); border-color: var(--line); }
+.small, .ph .small { color: var(--ink-3); }
