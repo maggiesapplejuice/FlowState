@@ -35,3 +35,26 @@ body { background: var(--bg) !important; }
 .chip { background: #151a20; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); }
 .transport select, .transport button, .pillbtn, .back, .speed, .viewtoggle { box-shadow: none; background: var(--btn); border-color: var(--line); }
 .small, .ph .small { color: var(--ink-3); }
+
+/* Bottom row: fixed geometry, so live numbers never re-wrap the device table or change the panels' height. */
+.health { table-layout: fixed; width: 100%; }
+.health th:nth-child(1), .health td:nth-child(1) { width: 38%; }
+.health th:nth-child(2), .health td:nth-child(2) { width: 20%; }
+.health th:nth-child(3), .health td:nth-child(3) { width: 16%; }
+.health th:nth-child(4), .health td:nth-child(4) { width: 16%; }
+.health th:nth-child(5), .health td:nth-child(5) { width: 10%; }
+.health th, .health td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.health tbody tr { height: 58px; }
+.health td.r, #h-time, .bignum, .g-num { font-variant-numeric: tabular-nums; }
+.health .dev .nm b, .health .dev .nm small { white-space: nowrap; }
+.ph .small { white-space: nowrap; }
+.bignum { min-height: 1.05em; }
+#l-sub { min-height: 1.5em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-gauge, .p-health, .p-line { min-height: 0; }
+
+/* Active transport buttons: white pill, dark text (the template assumes a colored pill with white text). */
+.transport #play, .ncard .open, .speed button[aria-pressed="true"], .viewtoggle button[aria-pressed="true"] { background: #ffffff; color: #0d1116; box-shadow: none; }
+.transport #play svg, .speed button[aria-pressed="true"] svg { color: #0d1116; }
+/* Time-to-alarm bars: teal top to bottom, no amber tint. */
+#tide-bar stop[offset="1"] { stop-color: var(--signal) !important; stop-opacity: 1; }
+#tide-bar stop[offset="0"] { stop-color: var(--signal) !important; stop-opacity: 0.35; }
