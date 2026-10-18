@@ -1,4 +1,4 @@
-# WaterProject: IBM Z Datathon 2026
+# FlowState: IBM Z Datathon 2026
 
 **Theme:** Real-Time AI for Critical Decisions
 
